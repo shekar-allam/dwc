@@ -34,10 +34,10 @@ import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
@@ -49,6 +49,7 @@ fun App() {
         }
     }
 }
+
 
 @Composable
 fun ChatAssistantScreen() {
@@ -159,19 +160,20 @@ fun ChatAssistantScreen() {
     }
 }
 
+@Serializable
+data class QueryPayload(val query: String)
+
 suspend fun sendQueryToServer(query: String, useChatMode: Boolean): String {
     val endpoint = if (useChatMode) {
-        "http://10.68.160.105:8081/api/api/chat"
+        "http://10.68.160.105:8081/api/chat"
     } else {
-        "http://10.68.160.105:8081/api/api/genericChat"
+        "http://10.68.160.105:8081/api/genericChat"
     }
 
     return try {
         val response = httpClient.post(endpoint) {
             contentType(io.ktor.http.ContentType.Application.Json)
-            setBody(buildJsonObject {
-                put("query", JsonPrimitive(query))
-            })
+            setBody(Json.encodeToString(QueryPayload(query)))
         }
         response.bodyAsText()
     } catch (e: Exception) {
@@ -182,7 +184,7 @@ suspend fun sendQueryToServer(query: String, useChatMode: Boolean): String {
 suspend fun uploadFileToServer(fileData: FileData): Boolean {
     return try {
         val response = httpClient.submitFormWithBinaryData(
-            url = "http://10.68.160.105:8081/api/api/upload",
+            url = "http://10.68.160.105:8081/api/upload",
             formData = formData {
                 append(
                     key = "file",
@@ -202,8 +204,9 @@ suspend fun uploadFileToServer(fileData: FileData): Boolean {
 
 suspend fun clearChatContext(): Boolean {
     return try {
-        val response = httpClient.post("http://10.68.160.105:8081/api/api/clearContext") {
+        val response = httpClient.post("http://10.68.160.105:8081/api/clearContext") {
             contentType(io.ktor.http.ContentType.Application.Json)
+            setBody("")
         }
         response.status.isSuccess()
     } catch (e: Exception) {

@@ -17,6 +17,7 @@ kotlin = "2.1.20"
 ktor = "3.0.1"
 kotlinx-coroutines = "1.10.2"
 ktorClientJs = "2.3.7"
+slf4jSimple = "2.0.9"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -42,6 +43,7 @@ ktor-serialization-kotlinx-json = { group = "io.ktor", name = "ktor-serializatio
 # Optional: for Android and Desktop engines
 ktor-client-okhttp = { group = "io.ktor", name = "ktor-client-okhttp", version.ref = "ktor" }
 ktor-client-cio = { group = "io.ktor", name = "ktor-client-cio", version.ref = "ktor" }
+slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4jSimple" }
 
 
 [plugins]
