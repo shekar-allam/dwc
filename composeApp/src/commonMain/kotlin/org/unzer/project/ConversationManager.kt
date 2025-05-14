@@ -1,7 +1,10 @@
-package org.unzer.project.ui.conversation
+package org.unzer.project
 
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import io.ktor.client.HttpClient
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.post
@@ -18,14 +21,36 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import org.unzer.project.FileData
-import org.unzer.project.httpClient
-import org.unzer.project.pickPdfFile
+import org.jetbrains.compose.resources.DrawableResource
+
+@Immutable
+data class Message(
+    val author: String,
+    val content: String,
+    val image: DrawableResource? = null
+)
+
+class ConversationUiState(
+    initialMessages: List<Message>
+) {
+    private val _messages: SnapshotStateList<Message> = mutableStateListOf(*initialMessages.toTypedArray())
+    val messages: List<Message> = _messages
+
+    fun addMessage(msg: Message) {
+        _messages.add(0, msg)
+    }
+}
 
 object ConversationManager {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private val httpClient = HttpClient()
 
-    val messages = mutableStateListOf("Assistant: Hello! How can I help you today?")
+    val uiState = ConversationUiState(
+        initialMessages = listOf(
+            Message("Assistant", "Hello! How can I help you today?")
+        )
+    )
+
     val status = mutableStateOf("Awaiting input...")
     val userQuery = mutableStateOf("")
     val uploadedFile = mutableStateOf<FileData?>(null)
@@ -34,10 +59,10 @@ object ConversationManager {
     fun sendQuery() {
         if (userQuery.value.isNotBlank()) {
             scope.launch {
-                messages.add("You: ${userQuery.value}")
+                uiState.addMessage(Message("You", userQuery.value))
                 status.value = "Sending query..."
                 val result = sendQueryToServer(userQuery.value, chatMode.value)
-                messages.add("Assistant: $result")
+                uiState.addMessage(Message("Assistant", result))
                 userQuery.value = ""
                 status.value = "Response received"
             }
@@ -57,7 +82,7 @@ object ConversationManager {
                 if (uploadSuccess) {
                     chatMode.value = true
                     status.value = "File uploaded. Chat mode activated."
-                    messages.add("You uploaded: ${file.name}")
+                    uiState.addMessage(Message("You", "Uploaded file: ${file.name}"))
                 } else {
                     uploadedFile.value = null
                     status.value = "File upload failed."
@@ -76,7 +101,7 @@ object ConversationManager {
                 chatMode.value = false
                 uploadedFile.value = null
                 status.value = "Context cleared. Switched to generic mode."
-                messages.add("Assistant: Context cleared. Ready for generic queries.")
+                uiState.addMessage(Message("Assistant", "Context cleared. Ready for generic queries."))
             } else {
                 status.value = "Failed to clear context."
             }
@@ -133,9 +158,33 @@ object ConversationManager {
     private const val BASE_URL = "http://10.0.2.2:8081/api"
 }
 
-// Data classes for serialization
 @Serializable
 data class QueryPayload(val query: String)
 
 @Serializable
 data class QueryResponse(val response: String)
+
+expect suspend fun pickPdfFile(): FileData?
+
+data class FileData(
+    val name: String,
+    val bytes: ByteArray
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as FileData
+
+        if (name != other.name) return false
+        if (!bytes.contentEquals(other.bytes)) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = name.hashCode()
+        result = 31 * result + bytes.contentHashCode()
+        return result
+    }
+}

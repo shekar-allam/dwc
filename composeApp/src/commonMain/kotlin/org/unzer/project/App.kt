@@ -13,7 +13,7 @@ import dwc.composeapp.generated.resources.Res
 import dwc.composeapp.generated.resources.app_name
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.stringResource
-import org.unzer.project.ui.conversation.ConversationContent
+import org.unzer.project.ui.conversation.ConversationScreen
 import org.unzer.project.ui.theme.AppTheme
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalResourceApi::class)
@@ -36,7 +36,7 @@ fun App() {
                 )
             }
         ) { paddingValues ->
-            ConversationContent(modifier = Modifier.padding(paddingValues))
+            ConversationScreen(modifier = Modifier.padding(paddingValues))
         }
     }
 }
