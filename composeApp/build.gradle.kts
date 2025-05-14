@@ -9,8 +9,6 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
-    id("org.jetbrains.kotlin.plugin.serialization") version "2.0.0"
-
 }
 
 kotlin {
@@ -62,7 +60,6 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.ktor.client.okhttp)
             implementation(libs.ktor.client.android)
-            implementation(libs.slf4j.simple)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
