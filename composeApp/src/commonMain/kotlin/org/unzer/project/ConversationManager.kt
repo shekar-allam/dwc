@@ -4,7 +4,6 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
-import io.ktor.client.HttpClient
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.post
@@ -43,7 +42,6 @@ class ConversationUiState(
 
 object ConversationManager {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-    private val httpClient = HttpClient()
 
     val uiState = ConversationUiState(
         initialMessages = listOf(
@@ -155,7 +153,7 @@ object ConversationManager {
         }
     }
 
-    private const val BASE_URL = "http://10.0.2.2:8081/api"
+    private const val BASE_URL = "http://10.68.160.105:8081/api"
 }
 
 @Serializable
