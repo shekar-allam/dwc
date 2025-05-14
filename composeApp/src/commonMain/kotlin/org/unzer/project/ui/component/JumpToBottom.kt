@@ -1,4 +1,4 @@
-package org.unzer.project.ui.conversation
+package org.unzer.project.ui.component
 
 import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.updateTransition
