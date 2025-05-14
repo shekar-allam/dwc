@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">DWC</string>
+    <string name="jumpBottom">Jump to bottom</string>
 </resources>

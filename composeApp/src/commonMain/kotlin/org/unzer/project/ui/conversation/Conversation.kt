@@ -1,7 +1,5 @@
-package org.unzer.project.ui
+package org.unzer.project.ui.conversation
 
-import androidx.compose.animation.core.animateDp
-import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,12 +11,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.Button
 import androidx.compose.material3.Divider
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -45,12 +39,13 @@ import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import org.unzer.project.FileData
 import org.unzer.project.httpClient
 import org.unzer.project.pickPdfFile
 
 @Composable
-fun ChatScreen(modifier: Modifier = Modifier) {
+fun ConversationContent(modifier: Modifier = Modifier) {
     val coroutineScope = rememberCoroutineScope()
     var status by remember { mutableStateOf("Awaiting input...") }
     var userQuery by remember { mutableStateOf("") }
@@ -171,43 +166,22 @@ fun ChatScreen(modifier: Modifier = Modifier) {
     }
 }
 
-@Composable
-fun JumpToBottom(enabled: Boolean, onClicked: () -> Unit, modifier: Modifier = Modifier) {
-    val transition = updateTransition(
-        if (enabled) Visibility.VISIBLE else Visibility.GONE,
-        label = "JumpToBottom"
-    )
-    val bottomOffset by transition.animateDp(label = "Offset") {
-        if (it == Visibility.GONE) (-32).dp else 32.dp
-    }
-    if (bottomOffset > 0.dp) {
-        ExtendedFloatingActionButton(
-            icon = { Icon(Icons.Filled.KeyboardArrowDown, contentDescription = null) },
-            text = { Text("Jump to top") },
-            onClick = onClicked,
-        )
-    }
-}
-
-private enum class Visibility {
-    VISIBLE, GONE
-}
-
 @Serializable
 data class QueryPayload(val query: String)
 
 suspend fun sendQueryToServer(query: String, useChatMode: Boolean): String {
     val endpoint = if (useChatMode) {
-        "http://10.0.2.2:8081/api/chat"
+        "$BASE_URL/chat"
     } else {
-        "http://10.0.2.2:8081/api/genericChat"
+        "$BASE_URL/genericChat"
     }
     return try {
         val response = httpClient.post(endpoint) {
             contentType(ContentType.Application.Json)
-            setBody(QueryPayload(query))
+            setBody(Json.encodeToString(QueryPayload.serializer(), QueryPayload(query)))
         }
-        response.bodyAsText()
+        val body = response.bodyAsText()
+        Json.decodeFromString(QueryResponse.serializer(), body).response
     } catch (e: Exception) {
         "Error: ${e.message}"
     }
@@ -216,7 +190,7 @@ suspend fun sendQueryToServer(query: String, useChatMode: Boolean): String {
 suspend fun uploadFileToServer(fileData: FileData): Boolean {
     return try {
         val response = httpClient.submitFormWithBinaryData(
-            url = "http://10.0.2.2:8081/api/upload",
+            url = "$BASE_URL/upload",
             formData = formData {
                 append(
                     key = "file",
@@ -236,7 +210,7 @@ suspend fun uploadFileToServer(fileData: FileData): Boolean {
 
 suspend fun clearChatContext(): Boolean {
     return try {
-        val response = httpClient.post("http://10.0.2.2:8081/api/clearContext") {
+        val response = httpClient.post("$BASE_URL/clearContext") {
             contentType(ContentType.Application.Json)
             setBody("")
         }
@@ -245,3 +219,5 @@ suspend fun clearChatContext(): Boolean {
         false
     }
 }
+
+const val BASE_URL = "http://10.0.2.2:8081/api"
