@@ -4,7 +4,6 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import androidx.activity.ComponentActivity
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.runBlocking
 
 object MyActivityProvider {
     internal var activity: ComponentActivity? = null
