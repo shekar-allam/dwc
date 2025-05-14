@@ -61,9 +61,9 @@ object ConversationManager {
             scope.launch {
                 uiState.addMessage(Message("You", userQuery.value))
                 status.value = "Sending query..."
+                userQuery.value = ""
                 val result = sendQueryToServer(userQuery.value, isDocumentSearchMode.value)
                 uiState.addMessage(Message("Assistant", result))
-                userQuery.value = ""
                 status.value = "Response received"
             }
         } else {

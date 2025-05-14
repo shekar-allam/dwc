@@ -1,8 +1,6 @@
 package org.unzer.project.ui.conversation
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,11 +16,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AttachFile
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
@@ -32,12 +28,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
@@ -51,7 +49,7 @@ fun ConversationScreen(modifier: Modifier = Modifier) {
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     val isSendButtonEnabled =
-        ConversationManager.userQuery.value.isNotBlank() // Enable Send button if text field is not empty
+        ConversationManager.userQuery.value.isNotBlank()
 
     Box(modifier = modifier.fillMaxSize().padding(16.dp)) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -104,10 +102,16 @@ fun ConversationScreen(modifier: Modifier = Modifier) {
     }
 }
 
+private val ChatBubbleShape = RoundedCornerShape(20.dp, 20.dp, 4.dp, 20.dp)
+
 @Composable
 fun MessageItem(message: Message) {
     val alignment = if (message.author == "You") Alignment.TopEnd else Alignment.TopStart
-    val avatarColor = if (message.author == "You") Color.Blue else Color.Gray
+    val backgroundBubbleColor = if (message.author == "You") {
+        MaterialTheme.colorScheme.primary
+    } else {
+        MaterialTheme.colorScheme.background
+    }
 
     Box(
         modifier = Modifier.fillMaxWidth(),
@@ -116,60 +120,26 @@ fun MessageItem(message: Message) {
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Avatar for Assistant (left side)
-            if (message.author != "You") {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(avatarColor),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = message.author.first().toString().uppercase(),
-                        color = Color.White,
-                        style = MaterialTheme.typography.headlineMedium
-                    )
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-            }
-
             // Message bubble
-            Column(
-                modifier = Modifier
-                    .background(
-                        color = if (message.author == "You") Color.LightGray else Color.White,
-                        shape = RoundedCornerShape(8.dp)
-                    )
-                    .padding(8.dp)
-            ) {
-                Text(text = message.author, style = MaterialTheme.typography.titleMedium)
-                Text(text = message.content, style = MaterialTheme.typography.bodyMedium)
-                if (message.image != null) {
-                    Image(
-                        painter = painterResource(message.image),
-                        contentDescription = "Attached image",
-                        modifier = Modifier.fillMaxWidth().height(200.dp)
-                    )
-                }
-            }
-
-            // Avatar for You (right side)
-            if (message.author == "You") {
-                Spacer(modifier = Modifier.width(8.dp))
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(avatarColor),
-                    contentAlignment = Alignment.Center
+            Column {
+                Surface(
+                    color = backgroundBubbleColor,
+                    shape = ChatBubbleShape
                 ) {
                     Text(
-                        text = message.author.first().toString().uppercase(),
-                        color = Color.White,
-                        style = MaterialTheme.typography.headlineMedium
+                        modifier = Modifier.padding(16.dp),
+                        text = message.content,
+                        style = MaterialTheme.typography.titleLarge
                     )
+                    if (message.image != null) {
+                        Image(
+                            painter = painterResource(message.image),
+                            contentDescription = "Attached image",
+                            modifier = Modifier.fillMaxWidth().height(200.dp)
+                        )
+                    }
                 }
+
             }
         }
     }
@@ -187,6 +157,7 @@ fun BottomBar(
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         OutlinedTextField(
+            textStyle = MaterialTheme.typography.titleLarge,
             value = userQuery,
             onValueChange = onQueryChange,
             label = { Text("Type your question...") },
@@ -196,14 +167,14 @@ fun BottomBar(
                 Icon(
                     imageVector = if (isDocumentSearchMode) Icons.Default.Description else Icons.Default.Search,
                     contentDescription = if (isDocumentSearchMode) "Document Search Mode" else "Generic Search Mode",
-                    tint = if (isDocumentSearchMode) Color.Blue else Color.Gray
+                    tint = if (isDocumentSearchMode) MaterialTheme.colorScheme.primary else Color.DarkGray
                 )
             },
             trailingIcon = {
                 Icon(
                     imageVector = Icons.Filled.AttachFile,
                     contentDescription = "Attach PDF",
-                    tint = Color.Gray,
+                    tint = Color.DarkGray,
                     modifier = Modifier
                         .size(24.dp)
                         .clickable { onUploadFile() }
@@ -218,7 +189,7 @@ fun BottomBar(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             // Clear Context button
-            OutlinedButton (
+            OutlinedButton(
                 modifier = Modifier.weight(0.5f),
                 onClick = onClearContext,
                 enabled = isDocumentSearchMode, // Only enabled in Document Search mode
@@ -235,7 +206,9 @@ fun BottomBar(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFFd81b60),
                     contentColor = Color.White,
-                    disabledContainerColor = ButtonDefaults.buttonColors().disabledContainerColor.copy(alpha = 0.5f),
+                    disabledContainerColor = ButtonDefaults.buttonColors().disabledContainerColor.copy(
+                        alpha = 0.5f
+                    ),
                     disabledContentColor = Color.White
                 ),
                 shape = RoundedCornerShape(16.dp)

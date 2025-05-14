@@ -12,10 +12,12 @@ kotlinxSerializationJson = "1.7.3"
 ktor = "3.0.1"
 kotlinx-coroutines = "1.10.2"
 ktorClientJs = "2.3.7"
+slf4jSimple = "2.0.9"
 ui = "1.7.3"
 coil = "3.0.4"
 
 [libraries]
+slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4jSimple" }
 ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "ui" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
 androidx-lifecycle-viewmodel = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel", version.ref = "androidx-lifecycle" }

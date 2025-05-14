@@ -80,6 +80,7 @@ kotlin {
             implementation(libs.coil.network.ktor)
             implementation(libs.ui)
             implementation(compose.materialIconsExtended)
+            implementation(libs.slf4j.simple)
         }
         appleMain.dependencies {
             // Ktor client dependency required for iOS
