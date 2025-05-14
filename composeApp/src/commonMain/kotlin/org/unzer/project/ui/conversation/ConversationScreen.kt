@@ -184,37 +184,21 @@ fun BottomBar(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Row(
+        Button(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            // Clear Context button
-            OutlinedButton(
-                modifier = Modifier.weight(0.5f),
-                onClick = onClearContext,
-                enabled = isDocumentSearchMode, // Only enabled in Document Search mode
-                border = ButtonDefaults.outlinedButtonBorder(true),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text("Clear Context")
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            Button(
-                modifier = Modifier.weight(0.5f),
-                onClick = onSendClick,
-                enabled = isSendButtonEnabled,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFd81b60),
-                    contentColor = Color.White,
-                    disabledContainerColor = ButtonDefaults.buttonColors().disabledContainerColor.copy(
-                        alpha = 0.5f
-                    ),
-                    disabledContentColor = Color.White
+            onClick = onSendClick,
+            enabled = isSendButtonEnabled,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFFd81b60),
+                contentColor = Color.White,
+                disabledContainerColor = ButtonDefaults.buttonColors().disabledContainerColor.copy(
+                    alpha = 0.5f
                 ),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text("Send")
-            }
+                disabledContentColor = Color.White
+            ),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Text("Send")
         }
     }
 }

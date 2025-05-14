@@ -31,17 +31,22 @@ object MyActivityProvider {
         }
 
         try {
-            val inputStream = activity.contentResolver.openInputStream(uri)
-            val name = activity.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+            val contentResolver = activity.contentResolver
+            val inputStream = contentResolver.openInputStream(uri)
+            val name = contentResolver.query(uri, null, null, null, null)?.use { cursor ->
                 val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
                 if (cursor.moveToFirst() && nameIndex != -1) {
                     cursor.getString(nameIndex)
-                } else "file.pdf"
-            } ?: "file.pdf"
+                } else {
+                    // fallback name with extension guess
+                    "file.${getExtensionFromMime(contentResolver.getType(uri))}"
+                }
+            } ?: "file.${getExtensionFromMime(contentResolver.getType(uri))}"
 
             val bytes = inputStream?.readBytes()
             filePickChannel.trySend(if (bytes != null) FileData(name, bytes) else null)
         } catch (e: Exception) {
+            e.printStackTrace()
             filePickChannel.trySend(null)
         }
     }
@@ -50,8 +55,19 @@ object MyActivityProvider {
         launchFilePicker?.invoke() ?: return null
         return filePickChannel.receive()
     }
-}
 
+    private fun getExtensionFromMime(mimeType: String?): String {
+        return when (mimeType) {
+            "application/pdf" -> "pdf"
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" -> "xlsx"
+            "text/csv" -> "csv"
+            "application/msword" -> "doc"
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document" -> "docx"
+            "text/plain" -> "txt"
+            else -> "bin"
+        }
+    }
+}
 
 
 

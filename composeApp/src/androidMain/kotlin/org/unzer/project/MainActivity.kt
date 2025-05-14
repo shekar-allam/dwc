@@ -8,17 +8,28 @@ import androidx.activity.result.contract.ActivityResultContracts
 
 class MainActivity : ComponentActivity() {
 
-    private lateinit var filePickerLauncher: ActivityResultLauncher<String>
+    private lateinit var filePickerLauncher: ActivityResultLauncher<Array<String>>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         MyActivityProvider.setActivity(this)
-        filePickerLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+
+        filePickerLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             MyActivityProvider.onFilePicked(uri)
         }
+
+        // Launch picker with supported MIME types
         MyActivityProvider.setFilePickerLauncher {
-            filePickerLauncher.launch("application/pdf") // Only PDFs
+            val supportedMimeTypes = arrayOf(
+                "application/pdf",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
+                "text/csv",
+                "application/msword",                                               // .doc
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
+                "text/plain"
+            )
+            filePickerLauncher.launch(supportedMimeTypes)
         }
 
         setContent {
@@ -31,4 +42,5 @@ class MainActivity : ComponentActivity() {
         MyActivityProvider.clearActivity()
     }
 }
+
 

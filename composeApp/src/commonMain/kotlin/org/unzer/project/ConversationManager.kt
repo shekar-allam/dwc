@@ -59,8 +59,8 @@ object ConversationManager {
             scope.launch {
                 uiState.addMessage(Message("You", userQuery.value))
                 status.value = "Sending query..."
-                userQuery.value = ""
                 val result = sendQueryToServer(userQuery.value, isDocumentSearchMode.value)
+                userQuery.value = ""
                 uiState.addMessage(Message("Assistant", result))
                 status.value = "Response received"
             }
@@ -107,7 +107,7 @@ object ConversationManager {
     }
 
     private suspend fun sendQueryToServer(query: String, isDocumentSearchMode: Boolean): String {
-        val endpoint = if (isDocumentSearchMode) "$BASE_URL/genericChat" else "$BASE_URL/chat"
+        val endpoint = "$BASE_URL/chat"
         return try {
             val response = httpClient.post(endpoint) {
                 contentType(ContentType.Application.Json)
@@ -122,6 +122,8 @@ object ConversationManager {
 
     private suspend fun uploadFileToServer(fileData: FileData): Boolean {
         return try {
+            val mimeType = getMimeTypeFromFileName(fileData.name)
+
             val response = httpClient.submitFormWithBinaryData(
                 url = "$BASE_URL/upload",
                 formData = formData {
@@ -130,14 +132,27 @@ object ConversationManager {
                         value = fileData.bytes,
                         headers = Headers.build {
                             append(HttpHeaders.ContentDisposition, "filename=\"${fileData.name}\"")
-                            append(HttpHeaders.ContentType, "application/pdf")
+                            append(HttpHeaders.ContentType, mimeType)
                         }
                     )
                 }
             )
             response.status.isSuccess()
         } catch (e: Exception) {
+            e.printStackTrace()
             false
+        }
+    }
+
+    private fun getMimeTypeFromFileName(fileName: String): String {
+        return when (fileName.substringAfterLast('.', "").lowercase()) {
+            "pdf" -> "application/pdf"
+            "xlsx" -> "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            "csv" -> "text/csv"
+            "doc" -> "application/msword"
+            "docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            "txt" -> "text/plain"
+            else -> "application/octet-stream"
         }
     }
 
@@ -153,11 +168,12 @@ object ConversationManager {
         }
     }
 
-    private const val BASE_URL = "http://10.68.160.105:8081/api"
+    //private const val BASE_URL = "http://10.68.160.105:8081/api"
+    private const val BASE_URL = "http://10.68.160.189:9090/api"
 }
 
 @Serializable
-data class QueryPayload(val query: String)
+data class QueryPayload(val message: String)
 
 @Serializable
 data class QueryResponse(val response: String)
