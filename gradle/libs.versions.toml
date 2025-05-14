@@ -15,6 +15,7 @@ ui = "1.7.3"
 coil = "3.0.4"
 
 [libraries]
+ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "ui" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
 androidx-lifecycle-viewmodel = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
@@ -30,7 +31,7 @@ ktor-serialization-kotlinx-json = { group = "io.ktor", name = "ktor-serializatio
 # Optional: for Android and Desktop engines
 ktor-client-okhttp = { group = "io.ktor", name = "ktor-client-okhttp", version.ref = "ktor" }
 ktor-client-cio = { group = "io.ktor", name = "ktor-client-cio", version.ref = "ktor" }
-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "ui" }
+
 
 # Ktor clients required by Coil
 ktor-client-android = { module = "io.ktor:ktor-client-android", version.ref = "ktor" }
