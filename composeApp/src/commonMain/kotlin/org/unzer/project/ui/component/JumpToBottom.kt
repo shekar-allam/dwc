@@ -5,6 +5,8 @@ import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -45,7 +47,7 @@ fun JumpToBottom(
         ExtendedFloatingActionButton(
             icon = {
                 Icon(
-                    imageVector = Icons.Filled.KeyboardArrowDown,
+                    imageVector = Icons.Filled.Edit,
                     modifier = Modifier.height(18.dp),
                     contentDescription = null
                 )

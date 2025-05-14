@@ -54,14 +54,14 @@ object ConversationManager {
     val status = mutableStateOf("Awaiting input...")
     val userQuery = mutableStateOf("")
     val uploadedFile = mutableStateOf<FileData?>(null)
-    val chatMode = mutableStateOf(false)
+    val isDocumentSearchMode = mutableStateOf(false)
 
     fun sendQuery() {
         if (userQuery.value.isNotBlank()) {
             scope.launch {
                 uiState.addMessage(Message("You", userQuery.value))
                 status.value = "Sending query..."
-                val result = sendQueryToServer(userQuery.value, chatMode.value)
+                val result = sendQueryToServer(userQuery.value, isDocumentSearchMode.value)
                 uiState.addMessage(Message("Assistant", result))
                 userQuery.value = ""
                 status.value = "Response received"
@@ -80,7 +80,7 @@ object ConversationManager {
                 status.value = "Uploading file..."
                 val uploadSuccess = uploadFileToServer(file)
                 if (uploadSuccess) {
-                    chatMode.value = true
+                    isDocumentSearchMode.value = true
                     status.value = "File uploaded. Chat mode activated."
                     uiState.addMessage(Message("You", "Uploaded file: ${file.name}"))
                 } else {
@@ -98,7 +98,7 @@ object ConversationManager {
             status.value = "Clearing context..."
             val cleared = clearChatContext()
             if (cleared) {
-                chatMode.value = false
+                isDocumentSearchMode.value = false
                 uploadedFile.value = null
                 status.value = "Context cleared. Switched to generic mode."
                 uiState.addMessage(Message("Assistant", "Context cleared. Ready for generic queries."))
@@ -108,8 +108,8 @@ object ConversationManager {
         }
     }
 
-    private suspend fun sendQueryToServer(query: String, useChatMode: Boolean): String {
-        val endpoint = if (useChatMode) "$BASE_URL/chat" else "$BASE_URL/genericChat"
+    private suspend fun sendQueryToServer(query: String, isDocumentSearchMode: Boolean): String {
+        val endpoint = if (isDocumentSearchMode) "$BASE_URL/genericChat" else "$BASE_URL/chat"
         return try {
             val response = httpClient.post(endpoint) {
                 contentType(ContentType.Application.Json)
