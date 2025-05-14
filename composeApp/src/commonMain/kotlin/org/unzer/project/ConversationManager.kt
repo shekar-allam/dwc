@@ -20,19 +20,19 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import org.jetbrains.compose.resources.DrawableResource
 
 @Immutable
 data class Message(
     val author: String,
-    val content: String,
-    val image: DrawableResource? = null
+    val content: String = "",
+    val imageBase64: String? = null
 )
 
 class ConversationUiState(
     initialMessages: List<Message>
 ) {
-    private val _messages: SnapshotStateList<Message> = mutableStateListOf(*initialMessages.toTypedArray())
+    private val _messages: SnapshotStateList<Message> =
+        mutableStateListOf(*initialMessages.toTypedArray())
     val messages: List<Message> = _messages
 
     fun addMessage(msg: Message) {
@@ -57,17 +57,41 @@ object ConversationManager {
     fun sendQuery() {
         if (userQuery.value.isNotBlank()) {
             scope.launch {
+                // Add user's message to UI
                 uiState.addMessage(Message("You", userQuery.value))
                 status.value = "Sending query..."
+
                 val result = sendQueryToServer(userQuery.value, isDocumentSearchMode.value)
                 userQuery.value = ""
-                uiState.addMessage(Message("Assistant", result))
+
+                // Process assistant's response
+                when (result) {
+                    is QueryResult.Text -> {
+                        uiState.addMessage(Message("Assistant", result.text))
+                    }
+
+                    is QueryResult.Base64Image -> {
+                        uiState.addMessage(
+                            Message(
+                                author = "Assistant",
+                                content = "",
+                                imageBase64 = result.base64Data
+                            )
+                        )
+                    }
+
+                    is QueryResult.Error -> {
+                        uiState.addMessage(Message("Assistant", result.message))
+                    }
+                }
+
                 status.value = "Response received"
             }
         } else {
             status.value = "Please enter a question."
         }
     }
+
 
     fun uploadFile() {
         scope.launch {
@@ -99,24 +123,40 @@ object ConversationManager {
                 isDocumentSearchMode.value = false
                 uploadedFile.value = null
                 status.value = "Context cleared. Switched to generic mode."
-                uiState.addMessage(Message("Assistant", "Context cleared. Ready for generic queries."))
+                uiState.addMessage(
+                    Message(
+                        "Assistant",
+                        "Context cleared. Ready for generic queries."
+                    )
+                )
             } else {
                 status.value = "Failed to clear context."
             }
         }
     }
 
-    private suspend fun sendQueryToServer(query: String, isDocumentSearchMode: Boolean): String {
+    private suspend fun sendQueryToServer(
+        query: String,
+        isDocumentSearchMode: Boolean
+    ): QueryResult {
         val endpoint = "$BASE_URL/chat"
         return try {
             val response = httpClient.post(endpoint) {
                 contentType(ContentType.Application.Json)
                 setBody(Json.encodeToString(QueryPayload.serializer(), QueryPayload(query)))
             }
+
             val body = response.bodyAsText()
-            Json.decodeFromString(QueryResponse.serializer(), body).response
+            val result = Json.decodeFromString(QueryResponse.serializer(), body).response
+
+            if (result.startsWith("data:image")) {
+                QueryResult.Base64Image(result.substringAfter(":::"))
+            } else {
+                QueryResult.Text(result)
+            }
+
         } catch (e: Exception) {
-            "Error: ${e.message}"
+            QueryResult.Error("Error: ${e.message}")
         }
     }
 
