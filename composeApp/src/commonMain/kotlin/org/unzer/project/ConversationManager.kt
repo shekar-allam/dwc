@@ -53,6 +53,7 @@ object ConversationManager {
     val userQuery = mutableStateOf("")
     val uploadedFile = mutableStateOf<FileData?>(null)
     val isDocumentSearchMode = mutableStateOf(false)
+    val isFileUploading = mutableStateOf(false)
 
     fun sendQuery() {
         if (userQuery.value.isNotBlank()) {
@@ -94,6 +95,7 @@ object ConversationManager {
 
 
     fun uploadFile() {
+        isFileUploading.value = true
         scope.launch {
             status.value = "Picking file..."
             val file = pickPdfFile()
@@ -109,8 +111,10 @@ object ConversationManager {
                     uploadedFile.value = null
                     status.value = "File upload failed."
                 }
+                isFileUploading.value = false
             } else {
                 status.value = "File upload cancelled or failed."
+                isFileUploading.value = false
             }
         }
     }

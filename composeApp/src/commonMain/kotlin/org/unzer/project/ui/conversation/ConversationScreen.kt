@@ -1,5 +1,6 @@
 package org.unzer.project.ui.conversation
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +21,7 @@ import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -32,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import kotlinx.coroutines.launch
 import org.unzer.project.ConversationManager
 import org.unzer.project.Message
@@ -41,15 +44,18 @@ import org.unzer.project.ui.component.JumpToBottom
 fun ConversationScreen(modifier: Modifier = Modifier) {
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
-    val isSendButtonEnabled =
-        ConversationManager.userQuery.value.isNotBlank()
+    val isSendButtonEnabled = ConversationManager.userQuery.value.isNotBlank()
+    val isFileUploading = ConversationManager.isFileUploading.value
 
-    Box(modifier = modifier.fillMaxSize().padding(16.dp)) {
-        Column(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
             // Message list
             LazyColumn(
                 state = listState,
-                modifier = Modifier.weight(1f).fillMaxWidth().padding(bottom = 8.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
                 reverseLayout = true
             ) {
                 items(ConversationManager.uiState.messages) { message ->
@@ -72,7 +78,7 @@ fun ConversationScreen(modifier: Modifier = Modifier) {
                 isDocumentSearchMode = ConversationManager.isDocumentSearchMode.value
             )
 
-            // Status text
+            // Status
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = ConversationManager.status.value,
@@ -81,7 +87,7 @@ fun ConversationScreen(modifier: Modifier = Modifier) {
             )
         }
 
-        // Jump to Bottom button
+        // Jump to Bottom
         val showJump = listState.firstVisibleItemIndex > 2
         JumpToBottom(
             enabled = showJump,
@@ -92,8 +98,22 @@ fun ConversationScreen(modifier: Modifier = Modifier) {
             },
             modifier = Modifier.align(Alignment.BottomCenter)
         )
+
+        // ⏳ Blocking Overlay Loader
+        if (isFileUploading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.4f))
+                    .zIndex(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            }
+        }
     }
 }
+
 
 private val ChatBubbleShape = RoundedCornerShape(20.dp, 20.dp, 4.dp, 20.dp)
 
